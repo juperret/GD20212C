@@ -172,7 +172,8 @@ CREATE TABLE MONKEY_D_BASE.Taller (
 
 CREATE TABLE MONKEY_D_BASE.Material (
 	id			INT IDENTITY PRIMARY KEY,
-	descripcion	NVARCHAR(255)	NOT NULL	)
+	descripcion	NVARCHAR(255)	NOT NULL,
+	precio      DECIMAL(18,2) NOT NULL	)
 
 CREATE TABLE MONKEY_D_BASE.Tarea_Tipo (
 	id			INT IDENTITY PRIMARY KEY,
@@ -350,4 +351,8 @@ JOIN MONKEY_D_BASE.Camion c ON ot.camion_id = c.id AND c.patente = m.CAMION_PATE
 JOIN MONKEY_D_BASE.Tarea t ON t.descripcion = m.TAREA_DESCRIPCION
 JOIN MONKEY_D_BASE.Empleado e ON e.legajo = m.MECANICO_NRO_LEGAJO
 
-SELECT * FROM gd_esquema.Maestra m --WHERE m.ORDEN_TRABAJO_FECHA is not null
+--CARGA MATERIAL
+INSERT INTO MONKEY_D_BASE.Material (id,descripcion,precio)
+SELECT distinct material_cod,material_descripcion,material_precio 
+FROM gd_esquema.Maestra m 
+WHERE material_cod is not null
