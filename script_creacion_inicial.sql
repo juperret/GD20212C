@@ -1,22 +1,8 @@
 /*******************
 *** BASE DE DATOS **
 ********************/
-USE GD2C2021
+USE GD2C2021;
 GO
-
-/************************
-*** CREACION DE SCHEMA **
-*************************/
-
-IF EXISTS (SELECT * FROM sys.schemas WHERE name = 'MONKEY_D_BASE')
-BEGIN
-	DROP SCHEMA MONKEY_D_BASE
-END
-GO
-
-CREATE SCHEMA MONKEY_D_BASE;
-
---CREATE SCHEMA MONKEY_D_BASE;
 
 /************************
 *** DROPEO DE OBJETOS ***
@@ -37,6 +23,10 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.
 	DROP TABLE MONKEY_D_BASE.Tarea_Material
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Material') and type = 'U')
+	DROP TABLE MONKEY_D_BASE.Material
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Tarea') and type = 'U')
 	DROP TABLE MONKEY_D_BASE.Tarea
 GO
@@ -45,20 +35,20 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.
 	DROP TABLE MONKEY_D_BASE.Tarea_Tipo
 GO
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Material') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Material
-GO
-
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Taller') and type = 'U')
 	DROP TABLE MONKEY_D_BASE.Taller
 GO
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Viaje') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Viaje
-GO
-
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Viaje_Paquete') and type = 'U')
 	DROP TABLE MONKEY_D_BASE.Viaje_Paquete
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Paquete_Tipo') and type = 'U')
+	DROP TABLE MONKEY_D_BASE.Paquete_tipo
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Viaje') and type = 'U')
+	DROP TABLE MONKEY_D_BASE.Viaje
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Empleado') and type = 'U')
@@ -81,13 +71,23 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.
 	DROP TABLE MONKEY_D_BASE.Marca
 GO
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Paquete_Tipo') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Paquete_tipo
-GO
-
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Recorrido') and type = 'U')
 	DROP TABLE MONKEY_D_BASE.Recorrido
 GO
+
+/************************
+*** CREACION DE SCHEMA **
+*************************/
+
+IF EXISTS (SELECT * FROM sys.schemas WHERE name = 'MONKEY_D_BASE')
+BEGIN
+	DROP SCHEMA MONKEY_D_BASE
+END
+GO
+
+CREATE SCHEMA MONKEY_D_BASE
+
+--CREATE SCHEMA MONKEY_D_BASE;
 
 /************************
 *** CRECION DE TABLAS ***
@@ -172,6 +172,7 @@ CREATE TABLE MONKEY_D_BASE.Taller (
 
 CREATE TABLE MONKEY_D_BASE.Material (
 	id			INT IDENTITY PRIMARY KEY,
+	codigo      NVARCHAR(100),
 	descripcion	NVARCHAR(255)	NOT NULL,
 	precio      DECIMAL(18,2) NOT NULL	)
 
@@ -184,12 +185,6 @@ CREATE TABLE MONKEY_D_BASE.Tarea (
 	descripcion		NVARCHAR(255)	NOT NULL,
 	tiempo_estimado	INT		NOT NULL,
 	tipo_id			INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Tarea_Tipo(id)	)
-
-CREATE TABLE MONKEY_D_BASE.Tarea_Material (
-	id					INT IDENTITY PRIMARY KEY,
-	material_cantidad	INT NOT NULL,
-	material_id			INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Material(id),
-	tarea_id			INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Tarea(id)	)
 
 CREATE TABLE MONKEY_D_BASE.Estado_OT (
 	id			INT IDENTITY PRIMARY KEY,
@@ -210,6 +205,12 @@ CREATE TABLE MONKEY_D_BASE.Orden_Tarea (
 	orden_id			INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Orden_Trabajo(id),
 	tarea_id			INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Tarea(id),
 	mecanico_legajo		INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Empleado(legajo)	)
+
+CREATE TABLE MONKEY_D_BASE.Tarea_Material (
+	id					INT IDENTITY PRIMARY KEY,
+	material_cantidad	INT NOT NULL,
+	material_id			INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Material(id),
+	tarea_id			INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Tarea(id)	)
 
 GO				-- hago la creacion de todas las tablas en un bloque, crea todo o nada
 
@@ -295,8 +296,8 @@ JOIN MONKEY_D_BASE.Paquete_Tipo pt ON pt.descripcion = m.PAQUETE_DESCRIPCION
 JOIN MONKEY_D_BASE.Viaje v ON v.fecha_inicio = m.VIAJE_FECHA_INICIO AND v.fecha_fin = m.VIAJE_FECHA_FIN AND v.combustible_consumido = m.VIAJE_CONSUMO_COMBUSTIBLE
 AND v.precio_recorrido_his = m.RECORRIDO_PRECIO AND v.chofer_legajo = m.CHOFER_NRO_LEGAJO
 JOIN MONKEY_D_BASE.Recorrido r ON r.ciudad_origen = m.RECORRIDO_CIUDAD_ORIGEN AND r.ciudad_destino = m.RECORRIDO_CIUDAD_DESTINO
-JOIN MONKEY_D_BASE.Camion c ON c.patente = m.CAMION_PATENTE
-WHERE m.VIAJE_FECHA_INICIO is not null;
+JOIN MONKEY_D_BASE.Camion c ON c.patente = m.CAMION_PATENTE AND c.id = v.camion_codigo
+WHERE m.VIAJE_FECHA_INICIO is not null; -- paquete_precio_hist representa lo que se cobro por tipo de paquete por unidad
 
 --CARGA TALLER
 INSERT INTO MONKEY_D_BASE.Taller (nombre,direccion,ciudad,mail,telefono)
@@ -324,9 +325,28 @@ ORDER BY m.TAREA_DESCRIPCION asc;
 
 SET IDENTITY_INSERT MONKEY_D_BASE.Tarea OFF; -- Desactivo la propiedad de autoincremento
 
+--CARGA MATERIAL
+INSERT INTO MONKEY_D_BASE.Material (codigo,descripcion,precio)
+SELECT distinct material_cod,
+(CASE WHEN ISNUMERIC(right(material_descripcion,1)) = 1 THEN LEFT(m.MATERIAL_DESCRIPCION, LEN(m.material_descripcion) - 1) ELSE m.MATERIAL_DESCRIPCION END),
+material_precio 
+FROM gd_esquema.Maestra m 
+WHERE material_cod is not null;
+
+--CARGA TAREA MATERIAL
+INSERT INTO MONKEY_D_BASE.Tarea_Material (tarea_id,material_id,material_cantidad)
+SELECT distinct m.TAREA_CODIGO,mat.id,(CASE WHEN ISNUMERIC(right(m.MATERIAL_DESCRIPCION,1)) = 1 THEN right(m.material_descripcion,1) ELSE 1 END) 
+FROM gd_esquema.Maestra m
+JOIN MONKEY_D_BASE.Material mat ON mat.codigo = m.MATERIAL_COD
+WHERE m.MATERIAL_COD is not null AND m.TAREA_CODIGO is not null
+ORDER BY 1 ASC;
+
 --CARGA ESTADO OT
 INSERT INTO MONKEY_D_BASE.Estado_OT (descripcion)
 VALUES ('Iniciada'); --Creo otro estado de orden de trabajo de ejemplo
+
+INSERT INTO MONKEY_D_BASE.Estado_OT (descripcion)
+VALUES ('Pausada');
 
 INSERT INTO MONKEY_D_BASE.Estado_OT (descripcion)
 SELECT distinct m.ORDEN_TRABAJO_ESTADO
@@ -343,16 +363,11 @@ JOIN MONKEY_D_BASE.Camion c ON c.patente = m.CAMION_PATENTE
 WHERE m.ORDEN_TRABAJO_FECHA is not null;
 
 --CARGA ORDEN TAREA
+INSERT INTO MONKEY_D_BASE.Orden_Tarea (fecha_planificada,fecha_ini_real,fecha_fin_real,orden_id,tarea_id,mecanico_legajo)
 SELECT distinct m.TAREA_FECHA_INICIO_PLANIFICADO,m.TAREA_FECHA_INICIO,m.TAREA_FECHA_FIN,ot.id,t.id,e.legajo
 FROM gd_esquema.Maestra m
 JOIN MONKEY_D_BASE.Orden_Trabajo ot ON ot.fecha = m.ORDEN_TRABAJO_FECHA 
 JOIN MONKEY_D_BASE.Taller tal ON ot.taller_id = tal.id AND tal.mail = m.TALLER_MAIL AND tal.direccion = m.TALLER_DIRECCION
-JOIN MONKEY_D_BASE.Camion c ON ot.camion_id = c.id AND c.patente = m.CAMION_PATENTE
+JOIN MONKEY_D_BASE.Camion c ON ot.camion_id = c.id -- AND c.patente = m.CAMION_PATENTE
 JOIN MONKEY_D_BASE.Tarea t ON t.descripcion = m.TAREA_DESCRIPCION
-JOIN MONKEY_D_BASE.Empleado e ON e.legajo = m.MECANICO_NRO_LEGAJO
-
---CARGA MATERIAL
-INSERT INTO MONKEY_D_BASE.Material (id,descripcion,precio)
-SELECT distinct material_cod,material_descripcion,material_precio 
-FROM gd_esquema.Maestra m 
-WHERE material_cod is not null
+JOIN MONKEY_D_BASE.Empleado e ON e.legajo = m.MECANICO_NRO_LEGAJO;
