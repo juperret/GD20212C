@@ -5,6 +5,13 @@ USE GD2C2021;
 GO
 
 /************************
+*** CREACION DE SCHEMA **
+*************************/
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'MONKEY_D_BASE')
+    EXEC ('CREATE SCHEMA MONKEY_D_BASE');
+GO
+
+/************************
 *** DROPEO DE OBJETOS ***
 *************************/
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Orden_Tarea') and type = 'U')
@@ -74,20 +81,6 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Recorrido') and type = 'U')
 	DROP TABLE MONKEY_D_BASE.Recorrido
 GO
-
-/************************
-*** CREACION DE SCHEMA **
-*************************/
-
-IF EXISTS (SELECT * FROM sys.schemas WHERE name = 'MONKEY_D_BASE')
-BEGIN
-	DROP SCHEMA MONKEY_D_BASE
-END
-GO
-
-CREATE SCHEMA MONKEY_D_BASE
-
---CREATE SCHEMA MONKEY_D_BASE;
 
 /************************
 *** CRECION DE TABLAS ***
