@@ -14,73 +14,44 @@ GO
 /************************
 *** DROPEO DE OBJETOS ***
 *************************/
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Orden_Tarea') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Orden_Tarea
-GO
+DECLARE @objeto nvarchar(100), 
+        @tabla nvarchar(100), 
+        @tipo nvarchar(2), 
+        @sql nvarchar(2000);
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Orden_Trabajo') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Orden_Trabajo
-GO
+DECLARE objetos CURSOR FOR 
+    SELECT    name, OBJECT_NAME(parent_object_id), type
+    FROM sys.objects
+    WHERE schema_id = SCHEMA_ID('MONKEY_D_BASE') 
+    AND type IN ('F', 'P', 'U', 'FN' )
+    ORDER BY type;
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Estado_OT') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Estado_OT
-GO
+OPEN objetos;
+FETCH NEXT FROM objetos INTO @objeto, @tabla, @tipo;
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Tarea_Material') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Tarea_Material
-GO
+WHILE @@fetch_status = 0
+BEGIN
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Material') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Material
-GO
+    IF @tipo = 'P'
+        SET @sql = 'DROP PROCEDURE MONKEY_D_BASE.' + @objeto;
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Tarea') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Tarea
-GO
+    IF @tipo = 'FN'
+        SET @sql = 'DROP FUNCTION MONKEY_D_BASE.' + @objeto;
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Tarea_Tipo') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Tarea_Tipo
-GO
+    IF @tipo = 'F'
+        SET @sql = 'ALTER TABLE MONKEY_D_BASE.' + @tabla + ' DROP CONSTRAINT ' + @objeto;
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Taller') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Taller
-GO
+    IF @tipo = 'U'
+        SET @sql = 'DROP TABLE MONKEY_D_BASE.' + @objeto;
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Viaje_Paquete') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Viaje_Paquete
-GO
+    EXEC (@sql)
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Paquete_Tipo') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Paquete_tipo
-GO
+    FETCH NEXT FROM objetos INTO @objeto, @tabla, @tipo;
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Viaje') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Viaje
-GO
+END;
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Empleado') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Empleado
-GO
-
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Empleado_Tipo') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Empleado_Tipo
-GO
-
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Camion') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Camion
-GO
-
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Camion_Modelo') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Camion_Modelo
-GO
-
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Marca') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Marca
-GO
-
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('MONKEY_D_BASE.Recorrido') and type = 'U')
-	DROP TABLE MONKEY_D_BASE.Recorrido
-GO
+CLOSE objetos;
+DEALLOCATE objetos;
 
 /************************
 *** CRECION DE TABLAS ***
