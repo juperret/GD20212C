@@ -188,7 +188,7 @@ GO
 *** CREACION SP *****
 *********************/
 -- auxiliares
-CREATE PROCEDURE MONKEY_D_BASE.Sp_registrarTabla (@tabla VARCHAR(MAX))
+CREATE PROCEDURE MONKEY_D_BASE.Sp_registrarTabla (@tabla VARCHAR(255))
 AS
 BEGIN
 		INSERT INTO MONKEY_D_BASE.ControlTablas
@@ -202,7 +202,7 @@ CREATE PROCEDURE MONKEY_D_BASE.Sp_LlenadoParametricas
 AS 
 BEGIN
 	
-	DECLARE @tabla VARCHAR(MAX)
+	DECLARE @tabla VARCHAR(255)
 
 	BEGIN TRY
 		
@@ -296,7 +296,7 @@ BEGIN
 		WHERE material_cod IS NOT NULL
 
 		EXEC MONKEY_D_BASE.Sp_registrarTabla @tabla;
-
+		
 		--Tarea_tipo
 		SET @tabla = 'Tarea_tipo';
 
@@ -313,7 +313,7 @@ BEGIN
 
 	BEGIN CATCH
 		
-		DECLARE @Message varchar(MAX) = 'Insert tabla '  + UPPER(@tabla) + '; Motivo: '  + UPPER(ERROR_MESSAGE()),
+		DECLARE @Message varchar(255) = 'Insert tabla '  + UPPER(@tabla) + '; Motivo: '  + UPPER(ERROR_MESSAGE()),
 				@Severity int = ERROR_SEVERITY(),
 				@State smallint = ERROR_STATE()					
 
@@ -328,7 +328,7 @@ CREATE PROCEDURE MONKEY_D_BASE.Sp_LlenadoSecundarias
 AS 
 BEGIN
 	
-	DECLARE @tabla VARCHAR(MAX)
+	DECLARE @tabla VARCHAR(255)
 
 	BEGIN TRY
 		
@@ -373,7 +373,7 @@ BEGIN
 		AND m.MODELO_VELOCIDAD_MAX = cm.velocidad_max;
 
 		EXEC MONKEY_D_BASE.Sp_registrarTabla @tabla;
-
+		
 		--Taller
 		SET @tabla = 'Taller';
 
@@ -423,7 +423,20 @@ BEGIN
 		FROM gd_esquema.Maestra m
 		JOIN MONKEY_D_BASE.Empleado_Tipo et ON et.tipo_descripcion = 'CHOFER'
 		WHERE m.CHOFER_NRO_LEGAJO IS NOT NULL
-	UNION
+		ORDER BY m.CHOFER_NRO_LEGAJO ASC;
+		
+		EXEC MONKEY_D_BASE.Sp_registrarTabla 'CHOFER';
+
+		INSERT INTO MONKEY_D_BASE.Empleado (
+			legajo,nombre,
+			apellido,
+			dni,
+			direccion,
+			telefono,
+			mail,
+			fecha_nacimiento,
+			costo_hora,
+			tipo_id	)
 		SELECT DISTINCT 
 			m.MECANICO_NRO_LEGAJO,
 			m.MECANICO_NOMBRE,
@@ -437,9 +450,10 @@ BEGIN
 			et.id
 		FROM gd_esquema.Maestra m 
 		JOIN MONKEY_D_BASE.Empleado_Tipo et ON et.tipo_descripcion = 'MECANICO'
-		WHERE m.MECANICO_NRO_LEGAJO IS NOT NULL;
-
-		EXEC MONKEY_D_BASE.Sp_registrarTabla @tabla;
+		WHERE m.MECANICO_NRO_LEGAJO IS NOT NULL
+		ORDER BY m.MECANICO_NRO_LEGAJO ASC;
+		
+		EXEC MONKEY_D_BASE.Sp_registrarTabla 'MECANICO';
 
 		SET IDENTITY_INSERT MONKEY_D_BASE.Empleado OFF; -- Desactivo la propiedad de autoincremento
 
@@ -479,7 +493,8 @@ BEGIN
 			(CASE WHEN ISNUMERIC(right(m.MATERIAL_DESCRIPCION,1)) = 1 THEN right(m.material_descripcion,1) ELSE 1 END) 
 		FROM gd_esquema.Maestra m
 		JOIN MONKEY_D_BASE.Material mat ON mat.codigo = m.MATERIAL_COD
-		WHERE m.MATERIAL_COD IS NOT NULL AND m.TAREA_CODIGO IS NOT NULL;
+		WHERE m.MATERIAL_COD IS NOT NULL AND m.TAREA_CODIGO IS NOT NULL
+		ORDER BY 1,2 ASC;
 
 		EXEC MONKEY_D_BASE.Sp_registrarTabla @tabla;
 
@@ -487,7 +502,7 @@ BEGIN
 
 	BEGIN CATCH
 		
-		DECLARE @Message varchar(MAX) = 'Insert tabla '  + UPPER(@tabla) + '; Motivo: '  + UPPER(ERROR_MESSAGE()),
+		DECLARE @Message varchar(255) = 'Insert tabla '  + UPPER(@tabla) + '; Motivo: '  + UPPER(ERROR_MESSAGE()),
 				@Severity int = ERROR_SEVERITY(),
 				@State smallint = ERROR_STATE()					
 
@@ -502,7 +517,7 @@ CREATE PROCEDURE MONKEY_D_BASE.Sp_LlenadoPrincipales
 AS 
 BEGIN
 	
-	DECLARE @tabla VARCHAR(MAX)
+	DECLARE @tabla VARCHAR(255)
 
 	BEGIN TRY
 		
@@ -550,7 +565,7 @@ BEGIN
 		JOIN MONKEY_D_BASE.Paquete_Tipo pt ON pt.descripcion = m.PAQUETE_DESCRIPCION
 		JOIN MONKEY_D_BASE.Viaje v ON v.fecha_inicio = m.VIAJE_FECHA_INICIO AND v.fecha_fin = m.VIAJE_FECHA_FIN AND v.combustible_consumido = m.VIAJE_CONSUMO_COMBUSTIBLE
 		AND v.precio_recorrido_his = m.RECORRIDO_PRECIO AND v.chofer_legajo = m.CHOFER_NRO_LEGAJO
-		JOIN MONKEY_D_BASE.Recorrido r ON r.ciudad_origen = m.RECORRIDO_CIUDAD_ORIGEN AND r.ciudad_destino = m.RECORRIDO_CIUDAD_DESTINO
+		JOIN MONKEY_D_BASE.Recorrido r ON r.ciudad_origen = m.RECORRIDO_CIUDAD_ORIGEN AND r.ciudad_destino = m.RECORRIDO_CIUDAD_DESTINO AND v.recorrido_codigo = r.id
 		JOIN MONKEY_D_BASE.Camion c ON c.patente = m.CAMION_PATENTE AND c.id = v.camion_codigo
 		WHERE m.VIAJE_FECHA_INICIO IS NOT NULL; -- paquete_precio_hist representa lo que se cobro por tipo de paquete por unidad
 		
@@ -597,17 +612,15 @@ BEGIN
 		FROM gd_esquema.Maestra m
 		JOIN MONKEY_D_BASE.Orden_Trabajo ot ON ot.fecha = m.ORDEN_TRABAJO_FECHA 
 		JOIN MONKEY_D_BASE.Taller tal ON ot.taller_id = tal.id AND tal.mail = m.TALLER_MAIL AND tal.direccion = m.TALLER_DIRECCION
-		JOIN MONKEY_D_BASE.Camion c ON ot.camion_id = c.id -- AND c.patente = m.CAMION_PATENTE
+		JOIN MONKEY_D_BASE.Camion c ON ot.camion_id = c.id AND c.patente = m.CAMION_PATENTE
 		JOIN MONKEY_D_BASE.Tarea t ON t.descripcion = m.TAREA_DESCRIPCION
 		JOIN MONKEY_D_BASE.Empleado e ON e.legajo = m.MECANICO_NRO_LEGAJO;
-
-		EXEC MONKEY_D_BASE.Sp_registrarTabla @tabla;
 
 	END TRY
 
 	BEGIN CATCH
 		
-		DECLARE @Message varchar(MAX) = 'Insert tabla '  + UPPER(@tabla) + '; Motivo: '  + UPPER(ERROR_MESSAGE()),
+		DECLARE @Message varchar(255) = 'Insert tabla '  + UPPER(@tabla) + '; Motivo: '  + UPPER(ERROR_MESSAGE()),
 				@Severity int = ERROR_SEVERITY(),
 				@State smallint = ERROR_STATE()					
 
