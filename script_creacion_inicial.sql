@@ -158,7 +158,7 @@ CREATE TABLE MONKEY_D_BASE.Tarea (
 
 CREATE TABLE MONKEY_D_BASE.Tarea_Material (
 	id					INT IDENTITY PRIMARY KEY,
-	material_cantidad	INT NOT NULL,
+	material_cantidad	INT	NULL,
 	material_id			INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Material(id),
 	tarea_id			INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Tarea(id)	);
 
@@ -493,7 +493,7 @@ BEGIN
 		SELECT DISTINCT 
 			m.TAREA_CODIGO,
 			mat.id,
-			(CASE WHEN ISNUMERIC(right(m.MATERIAL_DESCRIPCION,1)) = 1 THEN right(m.material_descripcion,1) ELSE 1 END) 
+			NULL 
 		FROM gd_esquema.Maestra m
 		JOIN MONKEY_D_BASE.Material mat ON mat.codigo = m.MATERIAL_COD
 		WHERE m.MATERIAL_COD IS NOT NULL AND m.TAREA_CODIGO IS NOT NULL
