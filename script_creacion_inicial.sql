@@ -395,7 +395,7 @@ BEGIN
 		EXEC MONKEY_D_BASE.Sp_registrarTabla @tabla;
 
 		--Empleado
-		SET @tabla = 'Empleado';
+		SET @tabla = 'Chofer';
 
 		SET IDENTITY_INSERT MONKEY_D_BASE.Empleado ON; -- Desactivo la propiedad de autoincremento
 
@@ -425,7 +425,10 @@ BEGIN
 		WHERE m.CHOFER_NRO_LEGAJO IS NOT NULL
 		ORDER BY m.CHOFER_NRO_LEGAJO ASC;
 		
-		EXEC MONKEY_D_BASE.Sp_registrarTabla 'CHOFER';
+		EXEC MONKEY_D_BASE.Sp_registrarTabla @tabla;
+		
+		--Mecanico
+		SET @tabla = 'Mecanico';
 
 		INSERT INTO MONKEY_D_BASE.Empleado (
 			legajo,nombre,
@@ -453,7 +456,7 @@ BEGIN
 		WHERE m.MECANICO_NRO_LEGAJO IS NOT NULL
 		ORDER BY m.MECANICO_NRO_LEGAJO ASC;
 		
-		EXEC MONKEY_D_BASE.Sp_registrarTabla 'MECANICO';
+		EXEC MONKEY_D_BASE.Sp_registrarTabla @tabla;
 
 		SET IDENTITY_INSERT MONKEY_D_BASE.Empleado OFF; -- Desactivo la propiedad de autoincremento
 
@@ -615,6 +618,8 @@ BEGIN
 		JOIN MONKEY_D_BASE.Camion c ON ot.camion_id = c.id AND c.patente = m.CAMION_PATENTE
 		JOIN MONKEY_D_BASE.Tarea t ON t.descripcion = m.TAREA_DESCRIPCION
 		JOIN MONKEY_D_BASE.Empleado e ON e.legajo = m.MECANICO_NRO_LEGAJO;
+		
+		EXEC MONKEY_D_BASE.Sp_registrarTabla @tabla;
 
 	END TRY
 
