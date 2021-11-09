@@ -559,8 +559,8 @@ BEGIN
 			paquete_precio_hist,
 			tipo_id,
 			viaje_id	)
-		SELECT DISTINCT 
-			m.PAQUETE_CANTIDAD,
+		SELECT  
+			sum(m.PAQUETE_CANTIDAD),
 			m.PAQUETE_PRECIO,
 			pt.id,
 			v.id
@@ -570,7 +570,8 @@ BEGIN
 		AND v.precio_recorrido_his = m.RECORRIDO_PRECIO AND v.chofer_legajo = m.CHOFER_NRO_LEGAJO
 		JOIN MONKEY_D_BASE.Recorrido r ON r.ciudad_origen = m.RECORRIDO_CIUDAD_ORIGEN AND r.ciudad_destino = m.RECORRIDO_CIUDAD_DESTINO AND v.recorrido_codigo = r.id
 		JOIN MONKEY_D_BASE.Camion c ON c.patente = m.CAMION_PATENTE AND c.id = v.camion_codigo
-		WHERE m.VIAJE_FECHA_INICIO IS NOT NULL; -- paquete_precio_hist representa lo que se cobro por tipo de paquete por unidad
+		WHERE m.VIAJE_FECHA_INICIO IS NOT NULL
+		GROUP BY m.PAQUETE_PRECIO,pt.id,v.id; -- paquete_precio_hist representa lo que se cobro por tipo de paquete por unidad
 		
 		EXEC MONKEY_D_BASE.Sp_registrarTabla @tabla;
 
@@ -585,11 +586,11 @@ BEGIN
 		SELECT DISTINCT 
 			m.ORDEN_TRABAJO_FECHA,
 			e.id,
-			c.id, 
-			tal.id
+			c.id--, 
+			--tal.id
 		FROM GD2C2021.gd_esquema.Maestra m
 		JOIN MONKEY_D_BASE.Estado_OT e ON e.descripcion = m.ORDEN_TRABAJO_ESTADO 
-		JOIN MONKEY_D_BASE.Taller tal ON tal.mail = m.TALLER_MAIL AND tal.direccion = m.TALLER_DIRECCION
+		--JOIN MONKEY_D_BASE.Taller tal ON tal.mail = m.TALLER_MAIL AND tal.direccion = m.TALLER_DIRECCION
 		JOIN MONKEY_D_BASE.Camion c ON c.patente = m.CAMION_PATENTE
 		WHERE m.ORDEN_TRABAJO_FECHA IS NOT NULL;
 
@@ -614,7 +615,7 @@ BEGIN
 			e.legajo
 		FROM gd_esquema.Maestra m
 		JOIN MONKEY_D_BASE.Orden_Trabajo ot ON ot.fecha = m.ORDEN_TRABAJO_FECHA 
-		JOIN MONKEY_D_BASE.Taller tal ON ot.taller_id = tal.id AND tal.mail = m.TALLER_MAIL AND tal.direccion = m.TALLER_DIRECCION
+		--JOIN MONKEY_D_BASE.Taller tal ON ot.taller_id = tal.id AND tal.mail = m.TALLER_MAIL AND tal.direccion = m.TALLER_DIRECCION
 		JOIN MONKEY_D_BASE.Camion c ON ot.camion_id = c.id AND c.patente = m.CAMION_PATENTE
 		JOIN MONKEY_D_BASE.Tarea t ON t.descripcion = m.TAREA_DESCRIPCION
 		JOIN MONKEY_D_BASE.Empleado e ON e.legajo = m.MECANICO_NRO_LEGAJO;
