@@ -113,7 +113,7 @@ CREATE TABLE MONKEY_D_BASE.Empleado (
 	mail				NVARCHAR(255)	NOT NULL,	
 	fecha_nacimiento	DATETIME2	NOT NULL,	
 	costo_hora			DECIMAL(18,2)	NOT NULL,
-	tipo_id				INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Empleado_Tipo(id)	);
+	tipo_id				INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Empleado_Tipo(id));
 
 CREATE TABLE MONKEY_D_BASE.Viaje (
 	id						INT IDENTITY PRIMARY KEY,
@@ -181,6 +181,7 @@ CREATE TABLE MONKEY_D_BASE.Orden_Tarea (
 	orden_id			INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Orden_Trabajo(id),
 	tarea_id			INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Tarea(id),
 	mecanico_legajo		INT FOREIGN KEY REFERENCES MONKEY_D_BASE.Empleado(legajo)	);
+
 			-- hago la creacion de todas las tablas en un bloque, crea todo o nada
 GO
 
@@ -398,7 +399,7 @@ BEGIN
 		SET @tabla = 'Chofer';
 
 		SET IDENTITY_INSERT MONKEY_D_BASE.Empleado ON; -- Desactivo la propiedad de autoincremento
-
+		
 		INSERT INTO MONKEY_D_BASE.Empleado (
 			legajo,nombre,
 			apellido,
@@ -408,7 +409,7 @@ BEGIN
 			mail,
 			fecha_nacimiento,
 			costo_hora,
-			tipo_id	)
+			tipo_id)
 		SELECT DISTINCT 
 			m.CHOFER_NRO_LEGAJO,
 			m.CHOFER_NOMBRE,
@@ -439,7 +440,7 @@ BEGIN
 			mail,
 			fecha_nacimiento,
 			costo_hora,
-			tipo_id	)
+			tipo_id)
 		SELECT DISTINCT 
 			m.MECANICO_NRO_LEGAJO,
 			m.MECANICO_NOMBRE,
@@ -586,11 +587,11 @@ BEGIN
 		SELECT DISTINCT 
 			m.ORDEN_TRABAJO_FECHA,
 			e.id,
-			c.id--, 
-			--tal.id
+			c.id, 
+			tal.id
 		FROM GD2C2021.gd_esquema.Maestra m
 		JOIN MONKEY_D_BASE.Estado_OT e ON e.descripcion = m.ORDEN_TRABAJO_ESTADO 
-		--JOIN MONKEY_D_BASE.Taller tal ON tal.mail = m.TALLER_MAIL AND tal.direccion = m.TALLER_DIRECCION
+		JOIN MONKEY_D_BASE.Taller tal ON tal.mail = m.TALLER_MAIL AND tal.direccion = m.TALLER_DIRECCION
 		JOIN MONKEY_D_BASE.Camion c ON c.patente = m.CAMION_PATENTE
 		WHERE m.ORDEN_TRABAJO_FECHA IS NOT NULL;
 
@@ -629,7 +630,6 @@ BEGIN
 		DECLARE @Message varchar(255) = 'Insert tabla '  + UPPER(@tabla) + '; Motivo: '  + UPPER(ERROR_MESSAGE()),
 				@Severity int = ERROR_SEVERITY(),
 				@State smallint = ERROR_STATE()					
-
 		RAISERROR(@Message, @Severity, @State);
 
 	END CATCH
